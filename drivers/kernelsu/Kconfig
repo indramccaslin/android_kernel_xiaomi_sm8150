@@ -63,7 +63,7 @@ config KSU_KPROBES_HOOK
 
 config KSU_SYSCALL_TABLE_HOOK
 	bool "KernelSU syscall table patching hook"
-	depends on (ARM64 || X86_64) && !KERNEL_4_14
+	depends on (ARM64 || X86_64) && LINUX_VERSION >= 4.17
 	help
 	  Patch sys_call_table entries directly to hook syscalls without
 	  kprobes or tracepoints. Intended for non-GKI kernels where kprobes
@@ -97,4 +97,74 @@ config KSU_SUSFS_SUS_MOUNT
     depends on KSU_SUSFS
     default y
     help
-        - Allow hiding suspicious mount paths
+        - Allow hiding suspicious mounts from /proc/self/mounts, mountinfo, mountstat.
+        - Effective on all processes for hiding mount entries.
+        - mnt_id and mnt_group_id will be assigned to a larger number.
+
+config KSU_SUSFS_SUS_KSTAT
+    bool "Enable to spoof suspicious kstat"
+    depends on KSU_SUSFS
+    default y
+    help
+        - Allow spoofing kstat for user-defined path.
+        - Effective only on zygote spawned user app process.
+
+config KSU_SUSFS_TRY_UMOUNT
+	bool "Enable to use ksu's try_umount"
+	depends on KSU_SUSFS
+	default y
+	help
+		- Allow using try_umount for configured mount paths.
+
+config KSU_SUSFS_SPOOF_UNAME
+    bool "Enable to spoof uname"
+    depends on KSU_SUSFS
+    default y
+    help
+        - Spoof uname output.
+
+config KSU_SUSFS_ENABLE_LOG
+    bool "Enable logging susfs log to kernel"
+    depends on KSU_SUSFS
+    default y
+    help
+        - Log susfs activity to kernel.
+
+config KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
+    bool "Enable to automatically hide ksu and susfs symbols from /proc/kallsyms"
+    depends on KSU_SUSFS
+    default y
+    help
+        - Hide KernelSU and SUSFS symbols in kallsyms.
+
+config KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
+    bool "Enable to spoof /proc/cmdline or /proc/bootconfig"
+    depends on KSU_SUSFS
+    default y
+    help
+        - Spoof kernel command-line or bootconfig output.
+
+config KSU_SUSFS_OPEN_REDIRECT
+    bool "Enable to redirect a path to be opened with another path (experimental)"
+    depends on KSU_SUSFS
+    default y
+    help
+        - Redirect a target path to another path.
+
+config KSU_SUSFS_SUS_MAP
+    bool "Enable to hide mmapped files from proc maps interfaces"
+    depends on KSU_SUSFS
+    default y
+    help
+        - Hide selected file-backed memory mappings.
+
+config KSU_SUSFS_SUS_MEMFD
+    bool "Enable to hide or spoof suspicious memfd (experimental)"
+    depends on KSU_SUSFS
+    default n
+    help
+        - Hide or spoof configured memfd names.
+
+endmenu
+
+endmenu
