@@ -91,22 +91,22 @@ config KSU_SUSFS_SUS_PATH
         - Effective only on zygote spawned user app process.
         - Use with cautious as it may cause performance loss and will be vulnerable to side channel attacks,
           just disable this feature if it doesn't work for you or you don't need it at all.
-        
+
 config KSU_SUSFS_SUS_MOUNT
     bool "Enable to hide suspicious mounts"
     depends on KSU_SUSFS
     default y
     help
-        - Allow hiding suspicious mounts from /proc/self/mounts, mountinfo, mountstat.
+        - Allow hiding the user-defined mount paths from /proc/self/[mounts|mountinfo|mountstat].
         - Effective on all processes for hiding mount entries.
-        - mnt_id and mnt_group_id will be assigned to a larger number.
+        - mnt_id and mnt_group_id of the sus mount will be assigned to a much bigger number to solve the ssue of id not being contiguous.
 
 config KSU_SUSFS_SUS_KSTAT
     bool "Enable to spoof suspicious kstat"
     depends on KSU_SUSFS
     default y
     help
-        - Allow spoofing kstat for user-defined path.
+        - Allow spoofing the kstat of user-defined file/directory.
         - Effective only on zygote spawned user app process.
 
 config KSU_SUSFS_TRY_UMOUNT
@@ -114,56 +114,66 @@ config KSU_SUSFS_TRY_UMOUNT
 	depends on KSU_SUSFS
 	default y
 	help
-		- Allow using try_umount for configured mount paths.
+		- Allow using try_umount to umount other user-defined mount paths prior to ksu's default umount paths.
+		- Effective only on zygote spawned umounted user app process.
 
 config KSU_SUSFS_SPOOF_UNAME
     bool "Enable to spoof uname"
     depends on KSU_SUSFS
     default y
     help
-        - Spoof uname output.
+        - Allow spoofing the string returned by uname syscall to user-defined string.
+        - Effective on all processes.
 
 config KSU_SUSFS_ENABLE_LOG
     bool "Enable logging susfs log to kernel"
     depends on KSU_SUSFS
     default y
     help
-        - Log susfs activity to kernel.
+        - Allow logging susfs log to kernel, uncheck it to completely disable all susfs log.
 
 config KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
     bool "Enable to automatically hide ksu and susfs symbols from /proc/kallsyms"
     depends on KSU_SUSFS
     default y
     help
-        - Hide KernelSU and SUSFS symbols in kallsyms.
+        - Automatically hide ksu and susfs symbols from '/proc/kallsyms'.
+        - Effective on all processes.
 
 config KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
-    bool "Enable to spoof /proc/cmdline or /proc/bootconfig"
+    bool "Enable to spoof /proc/bootconfig (gki) or /proc/cmdline (non-gki)"
     depends on KSU_SUSFS
     default y
     help
-        - Spoof kernel command-line or bootconfig output.
+        - Spoof the output of /proc/bootconfig (gki) or /proc/cmdline (non-gki) with a user-defined file.
+        - Effective on all processes.
 
 config KSU_SUSFS_OPEN_REDIRECT
     bool "Enable to redirect a path to be opened with another path (experimental)"
     depends on KSU_SUSFS
     default y
     help
-        - Redirect a target path to another path.
+        - Allow redirecting a target path to be opened with another user-defined path.
+        - Effective only on processes with uid < 2000.
+        - Please be reminded that process with open access to the target and redirected path can be detected.
 
 config KSU_SUSFS_SUS_MAP
-    bool "Enable to hide mmapped files from proc maps interfaces"
+    bool "Enable to hide some mmapped real file from different proc maps interfaces"
     depends on KSU_SUSFS
     default y
     help
-        - Hide selected file-backed memory mappings.
+        - Allow hiding mmapped real file from /proc/<pid>/[maps|smaps|smaps_rollup|map_files|mem|pagemap]
+        - It does NOT support hiding for anon memory.
+        - It does NOT hide any inline hooks or plt hooks cause by the injected library itself.
+        - It may not be able to evade detections by apps that implement a good injection detection.
+        - Effective only on zygote spawned umounted user app process.
 
 config KSU_SUSFS_SUS_MEMFD
-    bool "Enable to hide or spoof suspicious memfd (experimental)"
+    bool "Enable to hide or spoof suspicous memfd (experimental)"
     depends on KSU_SUSFS
     default n
     help
-        - Hide or spoof configured memfd names.
+        - Allow preventing the user-defined memfd name from being created
 
 endmenu
 
