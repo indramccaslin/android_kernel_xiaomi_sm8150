@@ -4822,7 +4822,8 @@ void sde_encoder_kickoff(struct drm_encoder *drm_enc, bool is_error)
 	 * recovery path once after the first kickoff when userspace selected a
 	 * different initial refresh rate, so the panel is reset with that mode.
 	 */
-	if (cmpxchg(&first_run, true, false) &&
+	if (dsi_display && dsi_display->panel &&
+	    cmpxchg(&first_run, true, false) &&
 	    sde_enc->crtc && sde_enc->crtc->mode.vrefresh != 60 &&
 	    sde_enc->cur_master && sde_enc->cur_master->connector) {
 		struct sde_connector *conn = container_of(
