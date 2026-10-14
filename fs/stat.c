@@ -169,6 +169,7 @@ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
 EXPORT_SYMBOL(vfs_statx_fd);
 #ifdef CONFIG_KSU
 extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
+extern void ksu_handle_newfstat_ret(unsigned int *fd, struct stat __user **statbuf_ptr);
 #endif
 
 
@@ -391,7 +392,12 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
 	error = vfs_fstatat(dfd, filename, &stat, flag);
 	if (error)
 		return error;
-	return cp_new_stat(&stat, statbuf);
+	error = cp_new_stat(&stat, statbuf);
+#ifdef CONFIG_KSU
+	if (!error)
+		ksu_handle_newfstat_ret((unsigned int *)&dfd, &statbuf);
+#endif
+	return error;
 }
 #endif
 
@@ -400,8 +406,13 @@ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
 	struct kstat stat;
 	int error = vfs_fstat(fd, &stat);
 
-	if (!error)
+	if (!error) {
 		error = cp_new_stat(&stat, statbuf);
+#ifdef CONFIG_KSU
+		if (!error)
+			ksu_handle_newfstat_ret(&fd, &statbuf);
+#endif
+	}
 
 	return error;
 }
