@@ -1,0 +1,36 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison flex libssl-dev libncurses5-dev libelf-dev build-essential zip unzip wget curl python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi git
+          wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android11-release/clang-r383902b.tar.gz -O clang.tar.gz
+          tar -xf clang.tar.gz
+          export PATH=$PWD/bin:$PATH
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CC=clang
+          export CLANG_TRIPLE=aarch64-linux-gnu-
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          make O=out vendor/sm8150_defconfig vendor/xiaomi/cepheus.config
+          make O=out -j$(nproc) 2>&1 | tail -20
+          zip -r kernel-cepheus.zip out/arch/arm64/boot/Image.gz-dtb out/arch/arm64/boot/Image 2>/dev/null || true
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-cepheus
+          path: kernel-cepheus.zip
